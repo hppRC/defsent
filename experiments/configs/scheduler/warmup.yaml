@@ -1,0 +1,8 @@
+# @package scheduler
+
+_target_: src.lr_scheduler.warmup_scheduler
+
+optimizer: ???
+steps_per_epoch: ???
+epochs: ${epochs}
+warmup_ratio: 0.1

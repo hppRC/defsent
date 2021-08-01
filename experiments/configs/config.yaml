@@ -1,0 +1,71 @@
+# @package _global_
+
+# specify here default training configuration
+defaults:
+  - model: default
+  - tokenizer: default
+  - trainer: default
+  - data_module: oxford
+  - optimizer: adam
+  - scheduler: warmup
+  - logger: mlflow
+
+  # enable color logging
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
+
+
+# path to original working directory (that `main.py` was executed from in command line)
+# hydra hijacks working directory by changing it to the current log directory,
+# so it's useful to have path to original work dir as a special variable
+# read more here: https://hydra.cc/docs/next/tutorials/basic/running_your_app/working_directory
+work_dir: ${hydra:runtime.cwd}
+
+# global configurations
+experiment_name: Default
+gpus: [0]
+lr: 1e-5
+epochs: 1
+batch_size: 16
+
+model_name: bert-base-uncased
+pooling_name: Mean
+
+dataset_dir: ${work_dir}/dataset/
+save_model: True
+
+d2w:
+  topk: 10
+  save_predictions: True
+
+sts:
+  data_dir: ${dataset_dir}/sts
+  do_whitening: False
+  to_lower: False
+
+
+hydra:
+    # output paths for hydra logs
+    run:
+        dir: logs/runs/${now:%Y-%m-%d}/${now:%H:%M:%S}/${hydra.job.override_dirname}
+    sweep:
+        dir: logs/multiruns/${now:%Y-%m-%d}/${now:%H:%M:%S}/
+        subdir: ${hydra.job.override_dirname}
+
+    job:
+      # you can set here environment variables that are universal for all users
+      # for system specific variables (like data paths) it's better to use .env file!
+      env_set:
+          # currently there are some issues with running sweeps alongside wandb
+          # https://github.com/wandb/client/issues/1314
+          # this env var fixes that
+          WANDB_START_METHOD: thread
+          TOKENIZERS_PARALLELISM: 'false'
+      # you can set here environment variables that are universal for all users
+      # for system specific variables (like data paths) it's better to use .env file!
+      # env_set:
+      config:
+        # configuration for the ${hydra.job.override_dirname} runtime variable
+        override_dirname:
+          kv_sep: '='
+          item_sep: '/'

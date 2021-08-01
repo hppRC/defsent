@@ -1,0 +1,6 @@
+# @package tokenizer
+
+_target_: transformers.AutoTokenizer.from_pretrained
+pretrained_model_name_or_path: ${model_name}
+
+add_prefix_space: True

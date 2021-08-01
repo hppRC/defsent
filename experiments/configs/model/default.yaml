@@ -1,0 +1,9 @@
+# @package model
+
+_target_: src.model.DefSent
+model_name: ${model_name}
+pooling_name: ${pooling_name}
+
+randomize_prediction_layer: False
+freeze_prediction_layer: True
+freeze_token_embeddings: True
