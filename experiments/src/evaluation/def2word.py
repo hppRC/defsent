@@ -1,10 +1,11 @@
-from typing import Callable
-import torch
-from transformers import PreTrainedTokenizerBase
-from tqdm import tqdm
-from src.model import DefSent
-from src.data_module import DataModule
 from pathlib import Path
+from typing import Callable
+
+import torch
+from src.data_module import DataModule
+from src.model import DefSent
+from tqdm import tqdm
+from transformers import PreTrainedTokenizerBase
 
 
 @torch.no_grad()
@@ -52,7 +53,11 @@ class Def2WordEvaluation:
 
         for batch in tqdm(dataloader):
             words_ids, definitions_ids, attention_mask = batch
-            words_ids, definitions_ids, attention_mask = words_ids.to(device), definitions_ids.to(device), attention_mask.to(device)
+            words_ids, definitions_ids, attention_mask = (
+                words_ids.to(device),
+                definitions_ids.to(device),
+                attention_mask.to(device),
+            )
 
             logits = model.predict_words(definitions_ids, attention_mask=attention_mask)
             hypothesis = logits.topk(self.topk, dim=1).indices
@@ -65,13 +70,15 @@ class Def2WordEvaluation:
                 assert len(hyp_words) == self.topk
 
                 if self.save_predictions:
-                    definition_tokens = self.tokenizer.convert_ids_to_tokens(definition_ids, skip_special_tokens=True)
-                    definition = self.tokenizer.convert_tokens_to_string(definition_tokens)
-                    res.append({
-                        "word": word,
-                        "definition": definition,
-                        "hyp_words": hyp_words
-                    })
+                    definition_tokens = self.tokenizer.convert_ids_to_tokens(
+                        definition_ids, skip_special_tokens=True
+                    )
+                    definition = self.tokenizer.convert_tokens_to_string(
+                        definition_tokens
+                    )
+                    res.append(
+                        {"word": word, "definition": definition, "hyp_words": hyp_words}
+                    )
 
                 already_found_correct_word = False
                 for i in range(self.topk):
@@ -129,9 +136,13 @@ class Def2WordEvaluationAll:
                 res = result[mode]["result"]
                 lines = []
                 for data in res:
-                    word, definition, hyp_words = data["word"], data["definition"], data["hyp_words"]
+                    word, definition, hyp_words = (
+                        data["word"],
+                        data["definition"],
+                        data["hyp_words"],
+                    )
                     hyp_line = "\t".join(hyp_words)
-                    lines.append(f'{word}\t[{definition}]\n{hyp_line}\n')
+                    lines.append(f"{word}\t[{definition}]\n{hyp_line}\n")
                 save_path.write_text("\n".join(lines))
                 self.log_artifact(save_path)
 

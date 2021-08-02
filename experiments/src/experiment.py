@@ -1,18 +1,19 @@
 import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.utilities import rank_zero_only
-from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 from src.data_module import DataModule
+from src.evaluation import Def2WordEvaluationAll, STSEvaluation
 from src.model import DefSent
 from torch import Tensor
 from torch.optim import Optimizer
-from src.evaluation import Def2WordEvaluationAll, STSEvaluation
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 
 class Experiment(pl.LightningModule):
@@ -27,7 +28,9 @@ class Experiment(pl.LightningModule):
         )
         self.model: DefSent = instantiate(config.model)
         self.tokenizer: PreTrainedTokenizerBase = instantiate(config.tokenizer)
-        self.data_module: DataModule = instantiate(config.data_module, tokenizer=self.tokenizer)
+        self.data_module: DataModule = instantiate(
+            config.data_module, tokenizer=self.tokenizer
+        )
 
         self.def2word_evaluator = Def2WordEvaluationAll(
             data_module=self.data_module,
@@ -36,16 +39,15 @@ class Experiment(pl.LightningModule):
             save_predictions=config.d2w.save_predictions,
             log_artifact=self.log_artifact,
         )
-        self.sts_evaluator = STSEvaluation(
-            data_dir=config.sts.data_dir,
-        )
-
+        self.sts_evaluator = STSEvaluation(data_dir=config.sts.data_dir)
 
     def configure_optimizers(self):
         params = (param for param in self.model.parameters() if param.requires_grad)
         steps_per_epoch = len(self.data_module.train_dataloader())
         optimizer: Optimizer = instantiate(self.config.optimizer, params=params)
-        scheduler = instantiate(self.config.scheduler, optimizer=optimizer, steps_per_epoch=steps_per_epoch)
+        scheduler = instantiate(
+            self.config.scheduler, optimizer=optimizer, steps_per_epoch=steps_per_epoch
+        )
         return [optimizer], [scheduler]
 
     def loss_fn(self, logits: Tensor, labels_ids: Tensor) -> Tensor:
@@ -53,14 +55,18 @@ class Experiment(pl.LightningModule):
 
     def training_step(self, batch: Tuple[Tensor, Tensor, Tensor], batch_idx: int):
         words_ids, definitions_ids, attention_mask = batch
-        logits = self.model.predict_words(definitions_ids, attention_mask=attention_mask)
+        logits = self.model.predict_words(
+            definitions_ids, attention_mask=attention_mask
+        )
         loss = self.loss_fn(logits, words_ids)
         self.log("train_loss", loss)
         return loss
 
     def validation_step(self, batch: Tuple[Tensor, Tensor, Tensor], batch_idx: int):
         words_ids, definitions_ids, attention_mask = batch
-        logits = self.model.predict_words(definitions_ids, attention_mask=attention_mask)
+        logits = self.model.predict_words(
+            definitions_ids, attention_mask=attention_mask
+        )
         loss = self.loss_fn(logits, words_ids)
         self.log("val_loss", loss)
         return loss
@@ -69,6 +75,7 @@ class Experiment(pl.LightningModule):
     def fit(self) -> None:
         self.trainer.fit(self, self.data_module)
         self.log_hyperparams()
+        self.log_cwd()
         self.log_artifact(".hydra/config.yaml")
         self.log_artifact(".hydra/hydra.yaml")
         self.log_artifact(".hydra/overrides.yaml")
@@ -116,6 +123,9 @@ class Experiment(pl.LightningModule):
             }
         )
 
+    def log_cwd(self) -> None:
+        self.logger.log_hyperparams({"_cwd": str(Path.cwd())})
+
     def log_main_metrics(self, metrics: Dict) -> None:
         main_metrics = {
             "d2w_test_MRR": metrics["d2w"]["test"]["MRR"],
@@ -136,10 +146,7 @@ class Experiment(pl.LightningModule):
     @torch.no_grad()
     def encode(self, sentences: List[str], batch_size: Optional[int]) -> Tensor:
         inputs = self.tokenizer(
-            sentences,
-            padding=True,
-            return_tensors="pt",
-            truncation=True,
+            sentences, padding=True, return_tensors="pt", truncation=True,
         )
         data_loader = torch.utils.data.DataLoader(
             list(zip(inputs.input_ids, inputs.attention_mask)),
@@ -149,7 +156,9 @@ class Experiment(pl.LightningModule):
 
         all_embs = []
         for batch in data_loader:
-            sentence_ids, attention_mask = self.transfer_batch_to_device(batch, self.device)
+            sentence_ids, attention_mask = self.transfer_batch_to_device(
+                batch, self.device
+            )
             embs = self.model(sentence_ids, attention_mask=attention_mask).cpu()
             all_embs.append(embs)
 
@@ -157,6 +166,5 @@ class Experiment(pl.LightningModule):
         return embeddings
 
     def save_model(self) -> None:
-        Path("./models").mkdir(parents=True, exist_ok=True)
-        torch.save(self.model.encoder.state_dict(), "./models/encoder.pt")
-        torch.save(self.model.prediction_layer.state_dict(), "./models/prediction-layer.pt")
+        self.model.pretrained_model.save_pretrained("./pretrained")
+        self.tokenizer.save_pretrained("./pretrained")

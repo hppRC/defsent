@@ -1,9 +1,12 @@
 from typing import List
-from torch import Tensor
+
 import torch.nn as nn
+from torch import Tensor
 
 
-def pad_sequence(sequences: List[Tensor], padding_value: int, padding_side: str = "right"):
+def pad_sequence(
+    sequences: List[Tensor], padding_value: int, padding_side: str = "right"
+):
     if padding_side == "right":
         return right_side_padding(sequences, padding_value)
     elif padding_side == "left":
@@ -14,9 +17,7 @@ def pad_sequence(sequences: List[Tensor], padding_value: int, padding_side: str 
 
 def right_side_padding(sequences: List[Tensor], padding_value: int):
     return nn.utils.rnn.pad_sequence(
-        sequences,
-        batch_first=True,
-        padding_value=padding_value,
+        sequences, batch_first=True, padding_value=padding_value,
     )
 
 

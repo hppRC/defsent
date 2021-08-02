@@ -1,4 +1,4 @@
-# DefSent: Sentence Embeddings using Definition Sentences
+# DefSent: Sentence Embeddings using Definition Sentences / Experiments
 
 arxiv: [https://arxiv.org/abs/2105.04339](https://arxiv.org/abs/2105.04339)
 

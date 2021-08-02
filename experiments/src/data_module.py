@@ -1,15 +1,15 @@
+import math
 import os
+from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-import torch
 import pytorch_lightning as pl
-import math
+import torch
+from src.dataset import Dataset
+from src.utils import pad_sequence
 from torch.functional import Tensor
 from torch.utils.data import DataLoader
-from pathlib import Path
 from transformers import PreTrainedTokenizerBase
-from src.utils import pad_sequence
-from src.dataset import Dataset
 
 
 class DataModule(pl.LightningDataModule):
@@ -32,7 +32,7 @@ class DataModule(pl.LightningDataModule):
     def text_to_data(self, lines: List[str]) -> Tuple[List[int], List[int]]:
         words, definitions = [], []
         for line in lines:
-            word, definition = line.strip().split("\t") # line: "word\tdefinition"
+            word, definition = line.strip().split("\t")  # line: "word\tdefinition"
             words.append(word)
             definitions.append(definition)
 
@@ -48,7 +48,9 @@ class DataModule(pl.LightningDataModule):
 
         return (filtered_words_ids, filtered_definitions_ids)
 
-    def collate_fn(self, data_list: List[Tuple[List[Tensor], List[Tensor]]]) -> Tuple[Tensor, Tensor, Tensor]:
+    def collate_fn(
+        self, data_list: List[Tuple[List[Tensor], List[Tensor]]]
+    ) -> Tuple[Tensor, Tensor, Tensor]:
         word_id_list, definition_ids_list = zip(*data_list)
         words_ids = torch.cat(word_id_list, dim=0)
         definitions_ids = pad_sequence(
@@ -60,21 +62,17 @@ class DataModule(pl.LightningDataModule):
 
         return (words_ids, definitions_ids, attention_mask)
 
-
     def setup(self, stage: Optional[str] = None) -> None:
         # make assignments here (train/valid/test split)
         # called on every GPUs
         self.train = Dataset(
-            data_path=self.data_dir/"train.tsv",
-            text_to_data=self.text_to_data,
+            data_path=self.data_dir / "train.tsv", text_to_data=self.text_to_data,
         )
         self.val = Dataset(
-            data_path=self.data_dir/"valid.tsv",
-            text_to_data=self.text_to_data,
+            data_path=self.data_dir / "valid.tsv", text_to_data=self.text_to_data,
         )
         self.test = Dataset(
-            data_path=self.data_dir/"test.tsv",
-            text_to_data=self.text_to_data,
+            data_path=self.data_dir / "test.tsv", text_to_data=self.text_to_data,
         )
 
     def train_dataloader(self) -> DataLoader:

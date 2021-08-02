@@ -1,0 +1,3 @@
+poetry run python main.py -m save_model=True gpus=[1] experiment_name=BERT-large-CLS model_name=bert-large-uncased pooling_name=CLS lr=5.656854249492381e-06 +exp_times=5,6,7,8,9
+poetry run python main.py -m save_model=True gpus=[1] experiment_name=BERT-large-Mean model_name=bert-large-uncased pooling_name=Mean lr=1.1313708498984761e-05 +exp_times=5,6,7,8,9
+poetry run python main.py -m save_model=True gpus=[1] experiment_name=BERT-large-Max model_name=bert-large-uncased pooling_name=Max lr=8e-06 +exp_times=5,6,7,8,9

@@ -10,7 +10,6 @@ from sklearn.metrics.pairwise import (
     paired_manhattan_distances,
 )
 from torch import Tensor
-import torch
 from tqdm import tqdm
 
 
@@ -299,9 +298,7 @@ class STSEvaluation:
         sts_evaluations = {}
         for name, evaluator in tqdm(list(self.sts_evaluators.items())):
             sts_evaluations[name] = evaluator(
-                encoder,
-                do_whitening=do_whitening,
-                to_lower=to_lower
+                encoder, do_whitening=do_whitening, to_lower=to_lower
             )
 
         sts_evaluations["AVG"] = {}
@@ -312,7 +309,9 @@ class STSEvaluation:
                 sts_evaluations["AVG"][metric][method] = 0.0
 
                 for task in self.sts_evaluators:
-                    sts_evaluations["AVG"][metric][method] += sts_evaluations[task][metric][method]
+                    sts_evaluations["AVG"][metric][method] += sts_evaluations[task][
+                        metric
+                    ][method]
                 sts_evaluations["AVG"][metric][method] /= len(self.sts_evaluators)
 
         return sts_evaluations

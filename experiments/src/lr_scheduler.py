@@ -11,12 +11,7 @@ class LRPolycy:
         return 1.0
 
 
-def warmup_scheduler(
-    optimizer,
-    steps_per_epoch: int,
-    epochs: int,
-    warmup_ratio: float
-):
+def warmup_scheduler(optimizer, steps_per_epoch: int, epochs: int, warmup_ratio: float):
     num_training_steps = epochs * steps_per_epoch
     num_warmup_steps = num_training_steps * warmup_ratio
 

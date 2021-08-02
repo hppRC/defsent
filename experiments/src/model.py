@@ -1,9 +1,17 @@
-import pytorch_lightning as pl
 from typing import Tuple
-from torch import Tensor
+
+import pytorch_lightning as pl
 import torch.nn as nn
-from transformers import BertForMaskedLM, RobertaForMaskedLM, AlbertForMaskedLM, DebertaForMaskedLM
 from src.pooling import NonParametricPooling
+from torch import Tensor
+from transformers import (
+    AlbertForMaskedLM,
+    BertForMaskedLM,
+    DebertaForMaskedLM,
+    PreTrainedModel,
+    RobertaForMaskedLM,
+)
+
 
 class DefSent(pl.LightningModule):
     def __init__(
@@ -18,9 +26,13 @@ class DefSent(pl.LightningModule):
         # When `freeze_prediction_layer or freeze_token_embeddings` is `False`, we should not tie `word_embeddings` and `prediction_layer.decoder`;
         # otherwise, when the parameters of one of them are updated, the other will be updated
         tie_word_embeddings = freeze_prediction_layer and freeze_token_embeddings
-        self.encoder, self.token_embeddings, self.prediction_layer = encoder_embeddings_prediction_layer(
-            model_name=model_name,
-            tie_word_embeddings=tie_word_embeddings,
+        (
+            self.pretrained_model,
+            self.encoder,
+            self.token_embeddings,
+            self.prediction_layer,
+        ) = pretrained_modules(
+            model_name=model_name, tie_word_embeddings=tie_word_embeddings,
         )
 
         if randomize_prediction_layer:
@@ -47,12 +59,9 @@ class DefSent(pl.LightningModule):
 
 # Each pretrained model have different architecture and name.
 # This function performs like an `adapter`.
-def encoder_embeddings_prediction_layer(
-    model_name: str,
-    tie_word_embeddings: bool,
-) -> Tuple[
-    nn.Module, nn.Module, nn.Module
-]:
+def pretrained_modules(
+    model_name: str, tie_word_embeddings: bool,
+) -> Tuple[PreTrainedModel, nn.Module, nn.Module, nn.Module]:
     if model_name in [
         "bert-base-uncased",
         "bert-large-uncased",
@@ -79,8 +88,7 @@ def encoder_embeddings_prediction_layer(
         # See all BERT models at https://huggingface.co/models?filter=bert
     ]:
         pretrained_model = BertForMaskedLM.from_pretrained(
-            model_name,
-            tie_word_embeddings=tie_word_embeddings,
+            model_name, tie_word_embeddings=tie_word_embeddings,
         )
         encoder = pretrained_model.bert
         token_embeddings = pretrained_model.bert.embeddings
@@ -93,8 +101,7 @@ def encoder_embeddings_prediction_layer(
         "xlm-roberta-large",
     ]:
         pretrained_model = RobertaForMaskedLM.from_pretrained(
-            model_name,
-            tie_word_embeddings=tie_word_embeddings,
+            model_name, tie_word_embeddings=tie_word_embeddings,
         )
         encoder = pretrained_model.roberta
         token_embeddings = pretrained_model.roberta.embeddings
@@ -102,8 +109,7 @@ def encoder_embeddings_prediction_layer(
 
     elif model_name in ["albert-base-v2", "albert-large-v2"]:
         pretrained_model = AlbertForMaskedLM.from_pretrained(
-            model_name,
-            tie_word_embeddings=tie_word_embeddings,
+            model_name, tie_word_embeddings=tie_word_embeddings,
         )
         encoder = pretrained_model.albert
         token_embeddings = pretrained_model.albert.embeddings
@@ -122,8 +128,7 @@ def encoder_embeddings_prediction_layer(
         "microsoft/deberta-v2-xxlarge-mnli",
     ]:
         pretrained_model = DebertaForMaskedLM.from_pretrained(
-            model_name,
-            tie_word_embeddings=tie_word_embeddings,
+            model_name, tie_word_embeddings=tie_word_embeddings,
         )
         encoder = pretrained_model.deberta
         token_embeddings = pretrained_model.deberta.embeddings
@@ -132,4 +137,4 @@ def encoder_embeddings_prediction_layer(
     else:
         raise ValueError(f"no such a model name! > {model_name}")
 
-    return encoder, token_embeddings, prediction_layer
+    return pretrained_model, encoder, token_embeddings, prediction_layer

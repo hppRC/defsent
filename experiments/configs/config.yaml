@@ -47,9 +47,9 @@ sts:
 hydra:
     # output paths for hydra logs
     run:
-        dir: logs/runs/${now:%Y-%m-%d}/${now:%H:%M:%S}/${hydra.job.override_dirname}
+        dir: logs/runs/${experiment_name}/${now:%Y-%m-%d}/${now:%H:%M:%S}/${hydra.job.override_dirname}
     sweep:
-        dir: logs/multiruns/${now:%Y-%m-%d}/${now:%H:%M:%S}/
+        dir: logs/multiruns/${experiment_name}/${now:%Y-%m-%d}/${now:%H:%M:%S}/
         subdir: ${hydra.job.override_dirname}
 
     job:

@@ -53,7 +53,7 @@ prepare_data_per_node: True
 plugins:
 amp_backend: native
 amp_level: O2
-distributed_backend: ddp # default: None
+distributed_backend: # default: None
 move_metrics_to_cpu: False
 multiple_trainloader_mode: max_size_cycle
 stochastic_weight_avg: False

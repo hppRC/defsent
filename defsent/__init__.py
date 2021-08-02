@@ -1,0 +1,1 @@
+from defsent.model import DefSent

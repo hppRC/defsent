@@ -1,6 +1,8 @@
-import torch
-from typing import Callable, List, Tuple, Union
 from pathlib import Path
+from typing import Callable, List, Tuple, Union
+
+import torch
+
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(
@@ -20,10 +22,13 @@ class Dataset(torch.utils.data.Dataset):
         if isinstance(key, int):
             return (
                 torch.LongTensor(self.words[key]),
-                torch.LongTensor(self.definitions[key])
+                torch.LongTensor(self.definitions[key]),
             )
         elif isinstance(key, slice):
             return (
                 [torch.LongTensor(word_id) for word_id in self.words[key]],
-                [torch.LongTensor(definition_ids) for definition_ids in self.definitions[key]],
+                [
+                    torch.LongTensor(definition_ids)
+                    for definition_ids in self.definitions[key]
+                ],
             )
