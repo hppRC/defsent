@@ -6,8 +6,7 @@ ACL Anthology: https://aclanthology.org/2021.acl-short.52/
 
 ## Overview
 
-![](./.github/images/overview.png)
-
+<img src="./.github/images/overview.png" height="480px"></img>
 
 ## Getting started
 
