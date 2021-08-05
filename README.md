@@ -71,6 +71,11 @@ Search: https://huggingface.co/models?search=defsent
 |[defsent-roberta-large-mean](https://huggingface.co/cl-nagoya/defsent-roberta-large-mean)|57.8|72.98|69.18|72.84|76.50|79.17|74.36|71.83|
 |[defsent-roberta-large-max](https://huggingface.co/cl-nagoya/defsent-roberta-large-max)|64.11|81.42|72.52|75.37|80.23|79.16|73.76|75.22|
 
+### Hyperparameters for each checkpoint and fine-tuning task performance
+
+![](./.github/images/hyperparameters.png)
+
+
 ## Citation
 
 ```bibtex
